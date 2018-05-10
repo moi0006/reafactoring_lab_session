@@ -39,13 +39,12 @@ public class Network {
 	 * Holds a pointer to some "first" node in the token ring. Used to ensure that
 	 * various printing operations return expected behaviour.
 	 */
-	private Node firstNode_;
+	public Node firstNode_;
 	/**
 	 * Maps the names of workstations on the actual workstations. Used to initiate
 	 * the requests for the network.
 	 */
 	private Hashtable workstations_;
-	
 
 	/**
 	 * Construct a <em>Network</em> suitable for holding #size Workstations.
@@ -79,10 +78,10 @@ public class Network {
 	public static Network DefaultExample() {
 		Network network = new Network(2);
 
-		Node wsFilip = new Node(Node.WORKSTATION, "Filip");
-		Node n1 = new Node(Node.NODE, "n1");
-		Node wsHans = new Node(Node.WORKSTATION, "Hans");
-		Node prAndy = new Node(Node.PRINTER, "Andy");
+		Node wsFilip = new Node(NodeType.WORKSTATION, "Filip");
+		Node n1 = new Node(NodeType.NODE, "n1");
+		Node wsHans = new Node(NodeType.WORKSTATION, "Hans");
+		Node prAndy = new Node(NodeType.PRINTER, "Andy");
 
 		wsFilip.nextNode_ = n1;
 		n1.nextNode_ = wsHans;
@@ -120,7 +119,7 @@ public class Network {
 		if (n == null) {
 			return false;
 		} else {
-			return n.type_ == Node.WORKSTATION;
+			return n.type_ == NodeType.WORKSTATION;
 		}
 	};
 
@@ -152,7 +151,7 @@ public class Network {
 		iter = workstations_.elements();
 		while (iter.hasMoreElements()) {
 			currentNode = (Node) iter.nextElement();
-			if (currentNode.type_ != Node.WORKSTATION) {
+			if (currentNode.type_ != NodeType.WORKSTATION) {
 				return false;
 			}
 			;
@@ -163,30 +162,27 @@ public class Network {
 		currentNode = firstNode_;
 		while (!encountered.containsKey(currentNode.name_)) {
 			encountered.put(currentNode.name_, currentNode);
-			if (currentNode.type_ == Node.WORKSTATION) {
+			if (currentNode.type_ == NodeType.WORKSTATION) {
 				workstationsFound++;
 			}
-			;
-			if (currentNode.type_ == Node.PRINTER) {
+			if (currentNode.type_ == NodeType.PRINTER) {
 				printersFound++;
 			}
-			;
 			currentNode = currentNode.nextNode_;
 		}
-		;
 		if (currentNode != firstNode_) {
 			return false;
 		}
-		;// not circular
+		// not circular
 		if (printersFound == 0) {
 			return false;
 		}
-		;// does not contain a printer
+		// does not contain a printer
 		if (workstationsFound != workstations_.size()) {
 			return false;
 		}
-		; // not all workstations are registered
-		// all verifications succeedeed
+		 // not all workstations are registered
+			// all verifications succeedeed
 		return true;
 	}
 
@@ -224,9 +220,8 @@ public class Network {
 			} catch (IOException exc) {
 				// just ignore
 			}
-			;
 			currentNode = currentNode.nextNode_;
-		} while (!packet.destination_.equals(currentNode.name_));
+		} while (!packet.atDestination(currentNode));
 
 		try {
 			report.write(">>> Broadcast travelled whole token ring.\n\n");
@@ -287,20 +282,18 @@ public class Network {
 		} catch (IOException exc) {
 			// just ignore
 		}
-		;
+		
 		currentNode = startNode.nextNode_;
-		while ((!packet.destination_.equals(currentNode.name_)) & (!packet.origin_.equals(currentNode.name_))) {
+		while ((!packet.atDestination(currentNode)) & (!packet.origin_.equals(currentNode.name_))) {
 			try {
 				currentNode.passPacketLogging(report, this);
 			} catch (IOException exc) {
 				// just ignore
 			}
-			;
-			currentNode = currentNode.nextNode_;
+				currentNode = currentNode.nextNode_;
 		}
-		;
-
-		if (packet.destination_.equals(currentNode.name_)) {
+		
+		if (packet.atDestination(currentNode)) {
 			result = currentNode.printDocument(this, packet, report);
 		} else {
 			try {
@@ -309,10 +302,8 @@ public class Network {
 			} catch (IOException exc) {
 				// just ignore
 			}
-			;
 			result = false;
 		}
-
 		return result;
 	}
 
@@ -335,129 +326,8 @@ public class Network {
 	public String toString() {
 		assert isInitialized();
 		StringBuffer buf = new StringBuffer(30 * workstations_.size());
-		printOn(buf);
+		firstNode_.printOn(this, buf);
 		return buf.toString();
 	}
-
-	/**
-	 * Write a printable representation of #receiver on the given #buf.
-	 * <p>
-	 * <strong>Precondition:</strong> isInitialized();
-	 * </p>
-	 */
-	public void printOn(StringBuffer buf) {
-		assert isInitialized();
-		Node currentNode = firstNode_;
-		do {
-			switch (currentNode.type_) {
-			case Node.NODE:
-				buf.append("Node ");
-				buf.append(currentNode.name_);
-				buf.append(" [Node]");
-				break;
-			case Node.WORKSTATION:
-				buf.append("Workstation ");
-				buf.append(currentNode.name_);
-				buf.append(" [Workstation]");
-				break;
-			case Node.PRINTER:
-				buf.append("Printer ");
-				buf.append(currentNode.name_);
-				buf.append(" [Printer]");
-				break;
-			default:
-				buf.append("(Unexpected)");
-				;
-				break;
-			}
-			;
-			buf.append(" -> ");
-			currentNode = currentNode.nextNode_;
-		} while (currentNode != firstNode_);
-		buf.append(" ... ");
-	}
-
-	/**
-	 * Write a HTML representation of #receiver on the given #buf.
-	 * <p>
-	 * <strong>Precondition:</strong> isInitialized();
-	 * </p>
-	 */
-	public void printHTMLOn(StringBuffer buf) {
-		assert isInitialized();
-
-		buf.append("<HTML>\n<HEAD>\n<TITLE>LAN Simulation</TITLE>\n</HEAD>\n<BODY>\n<H1>LAN SIMULATION</H1>");
-		Node currentNode = firstNode_;
-		buf.append("\n\n<UL>");
-		do {
-			buf.append("\n\t<LI> ");
-			switch (currentNode.type_) {
-			case Node.NODE:
-				buf.append("Node ");
-				buf.append(currentNode.name_);
-				buf.append(" [Node]");
-				break;
-			case Node.WORKSTATION:
-				buf.append("Workstation ");
-				buf.append(currentNode.name_);
-				buf.append(" [Workstation]");
-				break;
-			case Node.PRINTER:
-				buf.append("Printer ");
-				buf.append(currentNode.name_);
-				buf.append(" [Printer]");
-				break;
-			default:
-				buf.append("(Unexpected)");
-				;
-				break;
-			}
-			;
-			buf.append(" </LI>");
-			currentNode = currentNode.nextNode_;
-		} while (currentNode != firstNode_);
-		buf.append("\n\t<LI>...</LI>\n</UL>\n\n</BODY>\n</HTML>\n");
-	}
-
-	/**
-	 * Write an XML representation of #receiver on the given #buf.
-	 * <p>
-	 * <strong>Precondition:</strong> isInitialized();
-	 * </p>
-	 */
-	public void printXMLOn(StringBuffer buf) {
-		assert isInitialized();
-
-		Node currentNode = firstNode_;
-		buf.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\n<network>");
-		do {
-			buf.append("\n\t");
-			switch (currentNode.type_) {
-			case Node.NODE:
-				buf.append("<node>");
-				buf.append(currentNode.name_);
-				buf.append("</node>");
-				break;
-			case Node.WORKSTATION:
-				buf.append("<workstation>");
-				buf.append(currentNode.name_);
-				buf.append("</workstation>");
-				break;
-			case Node.PRINTER:
-				buf.append("<printer>");
-				buf.append(currentNode.name_);
-				buf.append("</printer>");
-				break;
-			default:
-				buf.append("<unknown></unknown>");
-				;
-				break;
-			}
-			;
-			currentNode = currentNode.nextNode_;
-		} while (currentNode != firstNode_);
-		buf.append("\n</network>");
-	}
-	 
 
 }

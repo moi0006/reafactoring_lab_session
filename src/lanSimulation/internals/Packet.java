@@ -55,4 +55,8 @@ public class Packet {
 		destination_ = destination;
 	}
 
+	public boolean atDestination(Node currentNode) {
+		return destination_.equals(currentNode.name_);
+	}
+
 }
