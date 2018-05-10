@@ -45,6 +45,7 @@ public class Network {
 	 * the requests for the network.
 	 */
 	private Hashtable workstations_;
+	
 
 	/**
 	 * Construct a <em>Network</em> suitable for holding #size Workstations.
@@ -219,7 +220,7 @@ public class Network {
 				report.write("\tNode '");
 				report.write(currentNode.name_);
 				report.write("' accepts broadcase packet.\n");
-				passPacketLogging(report, currentNode);
+				currentNode.passPacketLogging(report, this);
 			} catch (IOException exc) {
 				// just ignore
 			}
@@ -282,7 +283,7 @@ public class Network {
 		startNode = (Node) workstations_.get(workstation);
 
 		try {
-			passPacketLogging(report, startNode);
+			startNode.passPacketLogging(report, this);
 		} catch (IOException exc) {
 			// just ignore
 		}
@@ -290,7 +291,7 @@ public class Network {
 		currentNode = startNode.nextNode_;
 		while ((!packet.destination_.equals(currentNode.name_)) & (!packet.origin_.equals(currentNode.name_))) {
 			try {
-				passPacketLogging(report, currentNode);
+				currentNode.passPacketLogging(report, this);
 			} catch (IOException exc) {
 				// just ignore
 			}
@@ -313,13 +314,6 @@ public class Network {
 		}
 
 		return result;
-	}
-
-	private void passPacketLogging(Writer report, Node startNode) throws IOException {
-		report.write("\tNode '");
-		report.write(startNode.name_);
-		report.write("' passes packet on.\n");
-		report.flush();
 	}
 
 	private boolean printDocument(Node printer, Packet document, Writer report) {
@@ -518,5 +512,6 @@ public class Network {
 		} while (currentNode != firstNode_);
 		buf.append("\n</network>");
 	}
+	 
 
 }
