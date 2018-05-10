@@ -71,10 +71,10 @@ public class Node {
 		nextNode_ = nextNode;
 	}
 
-	public void passPacketLogging(Writer report, Network network) throws IOException {
+	public void logging(Writer report, String mensaje) throws IOException {
 		report.write("\tNode '");
 		report.write(name_);
-		report.write("' passes packet on.\n");
+		report.write("' "+ mensaje +"\n");
 		report.flush();
 	}
 

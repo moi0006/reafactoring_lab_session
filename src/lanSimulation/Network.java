@@ -211,17 +211,8 @@ public class Network {
 
 		Node currentNode = firstNode_;
 		Packet packet = new Packet("BROADCAST", firstNode_.name_, firstNode_.name_);
-		do {
-			try {
-				report.write("\tNode '");
-				report.write(currentNode.name_);
-				report.write("' accepts broadcase packet.\n");
-				currentNode.passPacketLogging(report, this);
-			} catch (IOException exc) {
-				// just ignore
-			}
-			currentNode = currentNode.nextNode_;
-		} while (!packet.atDestination(currentNode));
+		
+		currentNode = send(report, currentNode, packet, true);
 
 		try {
 			report.write(">>> Broadcast travelled whole token ring.\n\n");
@@ -269,29 +260,14 @@ public class Network {
 		} catch (IOException exc) {
 			// just ignore
 		}
-		;
+		
 
 		boolean result = false;
 		Node startNode, currentNode;
 		Packet packet = new Packet(document, workstation, printer);
 
-		startNode = (Node) workstations_.get(workstation);
-
-		try {
-			startNode.passPacketLogging(report, this);
-		} catch (IOException exc) {
-			// just ignore
-		}
-		
-		currentNode = startNode.nextNode_;
-		while ((!packet.atDestination(currentNode)) & (!packet.origin_.equals(currentNode.name_))) {
-			try {
-				currentNode.passPacketLogging(report, this);
-			} catch (IOException exc) {
-				// just ignore
-			}
-				currentNode = currentNode.nextNode_;
-		}
+		currentNode = (Node) workstations_.get(workstation);
+		currentNode = send(report, currentNode, packet, false);
 		
 		if (packet.atDestination(currentNode)) {
 			result = currentNode.printDocument(this, packet, report);
@@ -305,6 +281,21 @@ public class Network {
 			result = false;
 		}
 		return result;
+	}
+
+	private Node send(Writer report, Node currentNode, Packet packet, Boolean broadcast) {
+		do {
+			try {
+				if(broadcast==true) {
+					currentNode.logging(report, "accepts broadcase packet.");
+				}
+				currentNode.logging(report, "passes packet on.");
+			} catch (IOException exc) {
+				// just ignore
+			}
+				currentNode = currentNode.nextNode_;
+		}while ((!packet.atDestination(currentNode)) & (!packet.origin_.equals(currentNode.name_)));
+		return currentNode;
 	}
 
 	public void printAuthor(Writer report, String author, String title, String tipo) throws IOException {
