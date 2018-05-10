@@ -211,7 +211,6 @@ public class Network {
 		} catch (IOException exc) {
 			// just ignore
 		}
-		;
 
 		Node currentNode = firstNode_;
 		Packet packet = new Packet("BROADCAST", firstNode_.name_, firstNode_.name_);
@@ -220,10 +219,7 @@ public class Network {
 				report.write("\tNode '");
 				report.write(currentNode.name_);
 				report.write("' accepts broadcase packet.\n");
-				report.write("\tNode '");
-				report.write(currentNode.name_);
-				report.write("' passes packet on.\n");
-				report.flush();
+				passPacketLogging(report, currentNode);
 			} catch (IOException exc) {
 				// just ignore
 			}
@@ -286,10 +282,7 @@ public class Network {
 		startNode = (Node) workstations_.get(workstation);
 
 		try {
-			report.write("\tNode '");
-			report.write(startNode.name_);
-			report.write("' passes packet on.\n");
-			report.flush();
+			passPacketLogging(report, startNode);
 		} catch (IOException exc) {
 			// just ignore
 		}
@@ -297,10 +290,7 @@ public class Network {
 		currentNode = startNode.nextNode_;
 		while ((!packet.destination_.equals(currentNode.name_)) & (!packet.origin_.equals(currentNode.name_))) {
 			try {
-				report.write("\tNode '");
-				report.write(currentNode.name_);
-				report.write("' passes packet on.\n");
-				report.flush();
+				passPacketLogging(report, currentNode);
 			} catch (IOException exc) {
 				// just ignore
 			}
@@ -325,6 +315,13 @@ public class Network {
 		return result;
 	}
 
+	private void passPacketLogging(Writer report, Node startNode) throws IOException {
+		report.write("\tNode '");
+		report.write(startNode.name_);
+		report.write("' passes packet on.\n");
+		report.flush();
+	}
+
 	private boolean printDocument(Node printer, Packet document, Writer report) {
 		String author = "Unknown";
 		String title = "Untitled";
@@ -343,14 +340,12 @@ public class Network {
 						
 						author = document.message_.substring(startPos + 7, endPos);
 					}
-					
 					startPos = document.message_.indexOf("title:");
 					if (startPos >= 0) {
 						endPos = document.message_.indexOf(".", startPos + 6);
 						if (endPos < 0) {
 							endPos = document.message_.length();
 						}
-						
 						title = document.message_.substring(startPos + 6, endPos);
 					}
 					tipo=">>> Postscript job delivered.\n\n";
