@@ -32,12 +32,13 @@ public class Node {
 	/**
 	 * Holds the type of the Node.
 	 */
-	public byte type_;
+	private byte type_;
+
 	/**
 	 * Holds the name of the Node.
 	 */
 	public String name_;
-	/**	
+	/**
 	 * Holds the next Node in the token ring architecture.
 	 * 
 	 * @see lanSimulation.internals.Node
@@ -50,9 +51,9 @@ public class Node {
 	 * <strong>Precondition:</strong> (type >= NODE) & (type <= PRINTER);
 	 * </p>
 	 */
-	public Node(byte type, String name) {
-		assert (type >= NodeType.NODE) & (type <= NodeType.PRINTER);
-		type_ = type;
+	public Node(String name) {
+		//assert (type >= NodeType.NODE) & (type <= NodeType.PRINTER);
+		//setType_(type);
 		name_ = name;
 		nextNode_ = null;
 	}
@@ -64,9 +65,9 @@ public class Node {
 	 * <strong>Precondition:</strong> (type >= NODE) & (type <= PRINTER);
 	 * </p>
 	 */
-	public Node(byte type, String name, Node nextNode) {
-		assert (type >= NodeType.NODE) & (type <= NodeType.PRINTER);
-		type_ = type;
+	public Node(String name, Node nextNode) {
+		//assert (type >= NodeType.NODE) & (type <= NodeType.PRINTER);
+		//setType_(type);
 		name_ = name;
 		nextNode_ = nextNode;
 	}
@@ -74,7 +75,7 @@ public class Node {
 	public void logging(Writer report, String mensaje) throws IOException {
 		report.write("\tNode '");
 		report.write(name_);
-		report.write("' "+ mensaje +"\n");
+		report.write("' " + mensaje + "\n");
 		report.flush();
 	}
 
@@ -82,8 +83,8 @@ public class Node {
 		String author = "Unknown";
 		String title = "Untitled";
 		int startPos = 0, endPos = 0;
-	
-		if (type_ == NodeType.PRINTER) {
+
+		if (this instanceof Printer) {
 			try {
 				String tipo;
 				if (document.message_.startsWith("!PS")) {
@@ -93,7 +94,7 @@ public class Node {
 						if (endPos < 0) {
 							endPos = document.message_.length();
 						}
-						
+
 						author = document.message_.substring(startPos + 7, endPos);
 					}
 					startPos = document.message_.indexOf("title:");
@@ -104,21 +105,21 @@ public class Node {
 						}
 						title = document.message_.substring(startPos + 6, endPos);
 					}
-					tipo=">>> Postscript job delivered.\n\n";
+					tipo = ">>> Postscript job delivered.\n\n";
 					network.printAuthor(report, author, title, tipo);
 				} else {
 					title = "ASCII DOCUMENT";
 					if (document.message_.length() >= 16) {
 						author = document.message_.substring(8, 16);
 					}
-					tipo=">>> ASCII Print job delivered.\n\n";
+					tipo = ">>> ASCII Print job delivered.\n\n";
 					network.printAuthor(report, author, title, tipo);
 				}
-				
+
 			} catch (IOException exc) {
 				// just ignore
 			}
-			
+
 			return true;
 		} else {
 			try {
@@ -127,7 +128,6 @@ public class Node {
 			} catch (IOException exc) {
 				// just ignore
 			}
-			;
 			return false;
 		}
 	}
@@ -137,83 +137,57 @@ public class Node {
 	 * <p>
 	 * <strong>Precondition:</strong> isInitialized();
 	 * </p>
-	 * @param network TODO
-	 * @param buf TODO
+	 * 
+	 * @param network
+	 *            TODO
+	 * @param buf
+	 *            TODO
 	 */
-	public void printOn(Network network, StringBuffer buf) {
+	public void printOnGeneral(Network network, StringBuffer buf) {
 		assert network.isInitialized();
 		Node currentNode = this;
 		do {
-			switch (currentNode.type_) {
-			case NodeType.NODE:
-				buf.append("Node ");
-				buf.append(currentNode.name_);
-				buf.append(" [Node]");
-				break;
-			case NodeType.WORKSTATION:
-				buf.append("Workstation ");
-				buf.append(currentNode.name_);
-				buf.append(" [Workstation]");
-				break;
-			case NodeType.PRINTER:
-				buf.append("Printer ");
-				buf.append(currentNode.name_);
-				buf.append(" [Printer]");
-				break;
-			default:
-				buf.append("(Unexpected)");
-				;
-				break;
-			}
-			;
+			currentNode.printOn(currentNode, buf);
 			buf.append(" -> ");
 			currentNode = currentNode.nextNode_;
 		} while (currentNode != this);
 		buf.append(" ... ");
 	}
 
+	public void printOn(Node node,StringBuffer buf) {
+		printHTMLOn(buf, node);
+	}
+	
 	/**
 	 * Write a HTML representation of #receiver on the given #buf.
 	 * <p>
 	 * <strong>Precondition:</strong> isInitialized();
 	 * </p>
-	 * @param network TODO
-	 * @param buf TODO
+	 * 
+	 * @param network
+	 *            TODO
+	 * @param buf
+	 *            TODO
 	 */
-	public void printHTMLOn(Network network, StringBuffer buf) {
+	public void printHTMLOnGeneral(Network network, StringBuffer buf) {
 		assert network.isInitialized();
-	
+
 		buf.append("<HTML>\n<HEAD>\n<TITLE>LAN Simulation</TITLE>\n</HEAD>\n<BODY>\n<H1>LAN SIMULATION</H1>");
 		Node currentNode = this;
 		buf.append("\n\n<UL>");
 		do {
 			buf.append("\n\t<LI> ");
-			switch (currentNode.type_) {
-			case NodeType.NODE:
-				buf.append("Node ");
-				buf.append(currentNode.name_);
-				buf.append(" [Node]");
-				break;
-			case NodeType.WORKSTATION:
-				buf.append("Workstation ");
-				buf.append(currentNode.name_);
-				buf.append(" [Workstation]");
-				break;
-			case NodeType.PRINTER:
-				buf.append("Printer ");
-				buf.append(currentNode.name_);
-				buf.append(" [Printer]");
-				break;
-			default:
-				buf.append("(Unexpected)");
-				;
-				break;
-			}
-			;
+			currentNode.printHTMLOn(buf, currentNode);
 			buf.append(" </LI>");
 			currentNode = currentNode.nextNode_;
 		} while (currentNode != this);
 		buf.append("\n\t<LI>...</LI>\n</UL>\n\n</BODY>\n</HTML>\n");
+	}
+
+	public void printHTMLOn(StringBuffer buf, Node currentNode) {
+		buf.append("Node ");
+		buf.append(currentNode.name_);
+		buf.append(" [Node]");
 	}
 
 	/**
@@ -221,40 +195,36 @@ public class Node {
 	 * <p>
 	 * <strong>Precondition:</strong> isInitialized();
 	 * </p>
-	 * @param network TODO
-	 * @param buf TODO
+	 * 
+	 * @param network
+	 *            TODO
+	 * @param buf
+	 *            TODO
 	 */
-	public void printXMLOn(Network network, StringBuffer buf) {
+	public void printXMLOnGeneral(Network network, StringBuffer buf) {
 		assert network.isInitialized();
-	
 		Node currentNode = this;
 		buf.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\n<network>");
 		do {
 			buf.append("\n\t");
-			switch (currentNode.type_) {
-			case NodeType.NODE:
-				buf.append("<node>");
-				buf.append(currentNode.name_);
-				buf.append("</node>");
-				break;
-			case NodeType.WORKSTATION:
-				buf.append("<workstation>");
-				buf.append(currentNode.name_);
-				buf.append("</workstation>");
-				break;
-			case NodeType.PRINTER:
-				buf.append("<printer>");
-				buf.append(currentNode.name_);
-				buf.append("</printer>");
-				break;
-			default:
-				buf.append("<unknown></unknown>");
-				;
-				break;
-			}
-			;
+			currentNode.printXMLOn(buf, currentNode);
 			currentNode = currentNode.nextNode_;
 		} while (currentNode != this);
 		buf.append("\n</network>");
 	}
+
+	public void printXMLOn(StringBuffer buf, Node currentNode) {
+		buf.append("<node>");
+		buf.append(currentNode.name_);
+		buf.append("</node>");
+	}
+
+	public byte getType_() {
+		return type_;
+	}
+
+	public void setType_(byte type_) {
+		this.type_ = type_;
+	}
+
 }

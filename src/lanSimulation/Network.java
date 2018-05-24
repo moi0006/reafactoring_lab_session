@@ -78,10 +78,10 @@ public class Network {
 	public static Network DefaultExample() {
 		Network network = new Network(2);
 
-		Node wsFilip = new Node(NodeType.WORKSTATION, "Filip");
-		Node n1 = new Node(NodeType.NODE, "n1");
-		Node wsHans = new Node(NodeType.WORKSTATION, "Hans");
-		Node prAndy = new Node(NodeType.PRINTER, "Andy");
+		Node wsFilip = new WorkStation("Filip");
+		Node n1 = new Node("n1");
+		Node wsHans = new WorkStation("Hans");
+		Node prAndy = new Printer("Andy");
 
 		wsFilip.nextNode_ = n1;
 		n1.nextNode_ = wsHans;
@@ -102,7 +102,7 @@ public class Network {
 	 */
 	public boolean isInitialized() {
 		return (initPtr_ == this);
-	};
+	}
 
 	/**
 	 * Answer whether #receiver contains a workstation with the given name.
@@ -119,9 +119,9 @@ public class Network {
 		if (n == null) {
 			return false;
 		} else {
-			return n.type_ == NodeType.WORKSTATION;
+			return n instanceof WorkStation;
 		}
-	};
+	}
 
 	/**
 	 * Answer whether #receiver is a consistent token ring network. A consistent
@@ -142,30 +142,26 @@ public class Network {
 		if (workstations_.isEmpty()) {
 			return false;
 		}
-		;
 		if (firstNode_ == null) {
 			return false;
 		}
-		;
 		// verify whether all registered workstations are indeed workstations
 		iter = workstations_.elements();
 		while (iter.hasMoreElements()) {
 			currentNode = (Node) iter.nextElement();
-			if (currentNode.type_ != NodeType.WORKSTATION) {
+			if (! (currentNode instanceof WorkStation)) {
 				return false;
 			}
-			;
 		}
-		;
 		// enumerate the token ring, verifying whether all workstations are registered
 		// also count the number of printers and see whether the ring is circular
 		currentNode = firstNode_;
 		while (!encountered.containsKey(currentNode.name_)) {
 			encountered.put(currentNode.name_, currentNode);
-			if (currentNode.type_ == NodeType.WORKSTATION) {
+			if (currentNode instanceof WorkStation) {
 				workstationsFound++;
 			}
-			if (currentNode.type_ == NodeType.PRINTER) {
+			if (currentNode instanceof Printer) {
 				printersFound++;
 			}
 			currentNode = currentNode.nextNode_;
@@ -219,7 +215,6 @@ public class Network {
 		} catch (IOException exc) {
 			// just ignore
 		}
-		;
 		return true;
 	}
 
@@ -266,8 +261,8 @@ public class Network {
 		Node startNode, currentNode;
 		Packet packet = new Packet(document, workstation, printer);
 
-		currentNode = (Node) workstations_.get(workstation);
-		currentNode = send(report, currentNode, packet, false);
+		startNode = (Node) workstations_.get(workstation);
+		currentNode = send(report, startNode, packet, false);
 		
 		if (packet.atDestination(currentNode)) {
 			result = currentNode.printDocument(this, packet, report);
@@ -317,7 +312,7 @@ public class Network {
 	public String toString() {
 		assert isInitialized();
 		StringBuffer buf = new StringBuffer(30 * workstations_.size());
-		firstNode_.printOn(this, buf);
+		firstNode_.printOnGeneral(this, buf);
 		return buf.toString();
 	}
 

@@ -194,8 +194,8 @@ public class LANTests extends TestCase {
 	public void testBasicNode() {
 		Node node;
 
-		node = new Node(NodeType.NODE, "n");
-		assertEquals("type_", node.type_, NodeType.NODE);
+		node = new Node("n");
+		assertEquals("type_", node.getType_(), NodeType.NODE);
 		assertEquals("name_", node.name_, "n");
 		assertEquals("nextNode_", node.nextNode_, null);
 		node.nextNode_ = node;
@@ -261,11 +261,11 @@ public class LANTests extends TestCase {
 
 		try {
 			buf.append("---------------------------------ASCII------------------------------------------\n");
-			network.firstNode_.printOn(network, buf);
+			network.firstNode_.printOnGeneral(network, buf);
 			buf.append("\n\n---------------------------------HTML------------------------------------------\n");
-			network.firstNode_.printHTMLOn(network, buf);
+			network.firstNode_.printHTMLOnGeneral(network, buf);
 			buf.append("\n\n---------------------------------XML------------------------------------------\n");
-			network.firstNode_.printXMLOn(network, buf);
+			network.firstNode_.printXMLOnGeneral(network, buf);
 			generateOutput.write(buf.toString());
 			report.write("\n\n---------------------------------SCENARIO: Print Success --------------------------\n");
 			network.requestWorkstationPrintsDocument("Filip", "Hello World", "Andy", report);
@@ -288,9 +288,7 @@ public class LANTests extends TestCase {
 				generateOutput.close();
 			} catch (IOException exc) {
 			}
-			;
 		}
-		;
 		assertTrue("Generated output is not as expected ", compareFiles(generateOutputFName, expectedOutputFName));
 	}
 
